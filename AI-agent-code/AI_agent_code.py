@@ -1,122 +1,33 @@
-from typing import List, Dict
-from http import HTTPStatus
-import enum
-
-from dashscope import Generation
-from dashscope.api_entities.dashscope_response import Role
 from dashscope.api_entities.dashscope_response import Message
-import dashscope
 
-dashscope.api_key="sk-62996713ee5a4b67a0d51ab207a1f2df"
-
-default_messages=[{"role":"system","content":"You are a helpful assistant."}]
-
-# class Message:
-#     def __init__(self, role: str, content: str):
-#         self.data = {
-#             "role": role, 
-#             "content": content
-#             }
-#         pass # function __init__
-#     pass # class Message
-
-# call_api send the question to the remote mdels on internet
-def call_api(messages: List[Message]) -> Message:
-    whole_message: str = ""
-    role: str = ""
-    responses = Generation.call(Generation.Models.qwen_turbo, 
-                                messages=messages, 
-                                result_format="message", 
-                                stream=True, 
-                                incremental_output=True)
-    print("AI:", end='')
-    for response in responses:
-        if response.status_code == HTTPStatus.OK:
-            whole_message += response.output.choices[0]["message"]["content"]
-            if not role:
-                role = response.output.choices[0]["message"]["role"]
-                print("role:", role, end='\t')
-                pass # if not role
-            print(response.output.choices[0]["message"]["content"], end='')
-            pass # if
-        else:
-            print("Request id: %s, Status code: %s, error code: %s, error message: %s" % (
-                response.request_id, response.status_code,
-                response.code, response.message
-            ))
-            return None
-            pass # else
-        pass # for response in responses
-    print()
-    return Message(role=role, content=whole_message)
-    pass # function call_api
-
-class Person(object):
-    def __init__(self):
-        self.history: List[Message] = []
-        pass # function __init__
-
-    # record_history will record the chat history to self.history
-    # this function should only be call after successfully call the api.
-    def record_history(self, interlocution: List[Message]):
-        for i in interlocution:
-            self.history.append(i)
-            pass # for i in interlocution
-        pass # function record_history
-
-    # generate_prompt will generate prompt from history
-    def generate_prompt_from_history(self, new_message: Message) -> List[Message]:
-        messages = self.history
-        messages.append(new_message)
-        return messages
-        pass # function generate_prompt_from_history
-
-    # ask_models send the question to the AI models
-    def ask_models(self, new_message: Message) -> Message:
-        messages = self.generate_prompt_from_history(new_message)
-        messages.append(new_message)
-        answer = call_api(messages)
-        self.record_history([new_message, answer])
-        return answer
-        pass # function ask_models
-    pass # class Person
-
-# class Judger mean he will judge the input whether a require or a chat
-class Judger(Person):
-    # Thought is the enum, which has require, chat
-    class Thought(enum.Enum):
-        thought_require = enum.auto()
-        thought_chat = enum.auto()
-        pass # class Thought
-
-    def generate_prompt(self, new_message: Message) -> Message:
-        if new_message.content[-1] == "." or new_message.content[-1] == "¡£" or new_message.content[-1] == "£¬" or new_message.content[-1] == "," or new_message.content[-1] == "!" or new_message[-1] == "£¡" or new_message[-1] == "?" or new_message[-1] == "£¿":
-            new_message.content += "¡£"
-            pass # if new_message.content[-1]
-        new_message.content += "Çë·ÖÎöÎÒµÄÏë·¨ÊÇÒ»¸öĞèÇó»¹ÊÇ½öÁÄÌì£¬Çë»Ø´ğÊÇĞèÇó»òÁÄÌì£¬²»Òª½âÊÍ¡£"
-        return new_message
-        pass # function generate_prompt
-
-    def judge_requere_or_chat(self, answer: Message) -> Thought:
-        if answer.content == "ĞèÇó":
-            return self.Thought.thought_require
-        pass # function judge_require_or_chat will check the thought, and distribute tasks to product managers or chatbots.
-    pass # class Judger
-
-class ProductManager(Person):
-    def check_history(self):
-        if not self.history: # this is mean I don't ask the model onece, so initial the first questions.
-
-            pass # if not self.history
-
-        pass # function check_history
-    pass # class ProductManager
+from person import Judger
+from coder import ProductManager
+from writer import Writer, Novel, FeedbackCommenters
 
 def main():
-    message = Message(role="user", content="ÎÒÏëÒªÒ»¸ö×Ô¶¯··Âô»úµÄÈí¼ş´úÂëÊµÏÖ¡£")
-    product_manager = ProductManager()
-    product_manager.ask_models(message)
-    pass
+    novel = Novel()
+    novel.type = "çˆ±æƒ…"
+    novel.target_readers = "å¥³æ€§"
+    novel.basic_settings = "ç°å®ä¸–ç•Œï¼Œç°ä»£ï¼Œä¸­å›½"
+    novel.topic = "å¥³æ€§æˆé•¿"
+    novel.conflicts = "è€å…¬ä¸ç®¡å®¶ï¼Œä¸å°Šé‡è€å©†çš„åŠ³åŠ¨æˆæœ"
+    novel.roles = "è€å…¬çš„ç‰¹ç‚¹ï¼šå¤§ç”·å­ä¸»ä¹‰ï¼Œæ¯”è¾ƒè‡ªç§ï¼Œè€å©†çš„ç‰¹ç‚¹ï¼šå¾ˆä¼ ç»Ÿã€‚ç›®æ ‡ï¼šå¥³æ€§è§‰é†’"
+
+    message = Message(role="user", content="æˆ‘æƒ³å†™ä¸€ç¯‡å°è¯´ã€‚")
+    judger = Judger()
+    thought = judger.ask_models(message)
+    # print("thought =", thought)
+    # print("message = ", message)
+
+    if thought == judger.Thought.thought_require:
+        print("thout is require")
+        writer = Writer(novel=novel)
+        answer = writer.ask_models(message)
+        print("answer =", answer)
+        pass # if thought == thought_require
+    #product_manager = ProductManager()
+    #product_manager.ask_models(message)
+    pass # function main
 
 
 main()
