@@ -1,17 +1,17 @@
 from dashscope.api_entities.dashscope_response import Message
 
 from person import Judger
-from coder import ProductManager
-from writer import Writer, Novel, FeedbackCommenters
+from writer import Writer, Novel
 
 def main():
-    novel = Novel()
-    novel.type = "爱情"
-    novel.target_readers = "女性"
-    novel.basic_settings = "现实世界，现代，中国"
-    novel.topic = "女性成长"
-    novel.conflicts = "老公不管家，不尊重老婆的劳动成果"
-    novel.roles = "老公的特点：大男子主义，比较自私，老婆的特点：很传统。目标：女性觉醒"
+    novel = {}
+    novel["类型"] = "爱情"
+    novel["目标读者"] = "女性"
+    novel["基本设定"] = "现实世界，现代，中国"
+    novel["主题"] = "女性成长"
+    novel["主要冲突"] = "老公不管家，不尊重老婆的劳动成果"
+    novel["角色特点"] = "老公的特点：大男子主义，比较自私\n老婆的特点：很传统。\n目标：女性觉醒"
+    novel["字数"] = "10万字"
 
     message = Message(role="user", content="我想写一篇小说。")
     judger = Judger()
